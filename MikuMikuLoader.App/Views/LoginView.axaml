@@ -1,0 +1,40 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:MikuMikuLoader.App.ViewModels"
+             x:Class="MikuMikuLoader.App.Views.LoginView">
+
+  <Panel Background="{DynamicResource BgBrush}">
+    <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
+            BorderThickness="1" CornerRadius="10" Padding="24" Width="380"
+            HorizontalAlignment="Center" VerticalAlignment="Center">
+      <StackPanel Spacing="12">
+        <TextBlock Text="{Binding Title}" FontSize="18" FontWeight="Bold" />
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Username" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+          <TextBox Text="{Binding Username}" Watermark="username" VerticalContentAlignment="Center" />
+        </StackPanel>
+
+        <StackPanel Spacing="4">
+          <TextBlock Text="Password" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+          <TextBox Text="{Binding Password}" Watermark="password" PasswordChar="•"
+                   VerticalContentAlignment="Center" />
+        </StackPanel>
+
+        <CheckBox IsChecked="{Binding AsDeveloper}" IsVisible="{Binding IsRegister}"
+                  Content="Register as a developer (upload mods)"
+                  Foreground="{DynamicResource TextBrush}" FontFamily="{DynamicResource MonoFont}" FontSize="12.5" />
+
+        <Button Classes="accent" Content="{Binding SubmitText}" Command="{Binding SubmitCommand}"
+                IsEnabled="{Binding !IsBusy}" HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center" />
+
+        <TextBlock Text="{Binding Error}" Foreground="#E06C6C" FontSize="12" TextWrapping="Wrap"
+                   IsVisible="{Binding HasError}" />
+
+        <Button Classes="nav" Content="{Binding ToggleText}" Command="{Binding ToggleModeCommand}"
+                HorizontalAlignment="Center" />
+      </StackPanel>
+    </Border>
+  </Panel>
+</UserControl>

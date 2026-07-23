@@ -1,0 +1,127 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:MikuMikuLoader.App.ViewModels"
+             x:Class="MikuMikuLoader.App.Views.ModDetailView">
+
+  <ScrollViewer Background="{DynamicResource BgBrush}">
+    <StackPanel Margin="20" Spacing="14" MaxWidth="760" HorizontalAlignment="Left">
+
+      <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Left">
+        <Button Classes="nav" Content="Back" Command="{Binding BackCommand}" />
+        <Button Classes="nav" Content="Refresh" Command="{Binding RefreshCommand}" />
+      </StackPanel>
+
+      <StackPanel Spacing="4">
+        <TextBlock Text="{Binding Title}" FontSize="20" FontWeight="Bold" />
+        <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource MutedBrush}" FontSize="12.5" />
+      </StackPanel>
+
+      <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
+              BorderThickness="1" CornerRadius="13" Padding="16">
+        <StackPanel Spacing="8">
+          <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled"
+                        IsVisible="{Binding HasImages}" MaxHeight="240">
+            <ItemsControl ItemsSource="{Binding Images}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                  <StackPanel Orientation="Horizontal" Spacing="8" />
+                </ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border CornerRadius="6" ClipToBounds="True" MaxHeight="220">
+                    <Image Source="{Binding}" Stretch="Uniform" />
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+          <TextBlock Text="{Binding Description}" Foreground="#C4C7CD" TextWrapping="Wrap" />
+          <Button Classes="ghost" Content="View source" HorizontalAlignment="Left"
+                  Command="{Binding OpenRepoCommand}" IsVisible="{Binding HasRepo}" />
+          <TextBlock Text="{Binding TagsText}" Foreground="{DynamicResource MutedBrush}"
+                     FontSize="12" IsVisible="{Binding HasTags}" />
+          <TextBlock Text="{Binding RatingSummary}" Foreground="{DynamicResource AccentBrush}" FontSize="13" />
+        </StackPanel>
+      </Border>
+
+      <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
+              BorderThickness="1" CornerRadius="13" Padding="16" IsVisible="{Binding IsLoggedIn}">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Rate this mod" FontWeight="Bold" />
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <ComboBox ItemsSource="{Binding StarOptions}" SelectedItem="{Binding NewStars}" Width="80" />
+            <TextBox Text="{Binding ReviewBody}" Watermark="Optional review…" Width="360"
+                     VerticalContentAlignment="Center" />
+            <Button Classes="accent" Content="Submit" Command="{Binding SubmitRatingCommand}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <StackPanel Spacing="10">
+        <TextBlock Text="Reviews" FontWeight="Bold" />
+        <TextBlock Text="No written reviews yet." IsVisible="{Binding HasNoReviews}"
+                   Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+        <ItemsControl ItemsSource="{Binding Reviews}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Background="{DynamicResource CardBrush}" CornerRadius="6"
+                      Padding="10" Margin="0,0,0,6">
+                <StackPanel Spacing="3">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="{Binding Stars}" Foreground="{DynamicResource AccentBrush}"
+                               FontWeight="Bold" FontSize="12" />
+                    <TextBlock Text="{Binding Author}" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+                  </StackPanel>
+                  <TextBlock Text="{Binding Body}" TextWrapping="Wrap" FontSize="12.5" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <TextBlock Text="Comments" FontWeight="Bold" />
+
+        <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
+                BorderThickness="1" CornerRadius="13" Padding="12" IsVisible="{Binding IsLoggedIn}">
+          <StackPanel Spacing="8">
+            <TextBox Text="{Binding NewComment}" Watermark="Add a comment…"
+                     AcceptsReturn="True" TextWrapping="Wrap" Height="60" />
+            <Button Classes="accent" Content="Post comment" Command="{Binding PostCommentCommand}"
+                    HorizontalAlignment="Left" />
+          </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
+                BorderThickness="1" CornerRadius="13" Padding="12" IsVisible="{Binding IsGuest}">
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <TextBlock Text="Sign in to comment or rate." Foreground="{DynamicResource MutedBrush}"
+                       VerticalAlignment="Center" />
+            <Button Classes="ghost" Content="Sign in" Command="{Binding GoLoginCommand}" />
+          </StackPanel>
+        </Border>
+
+        <TextBlock Text="No comments yet." IsVisible="{Binding HasNoComments}"
+                   Foreground="{DynamicResource MutedBrush}" />
+
+        <ItemsControl ItemsSource="{Binding Comments}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Border Classes="card">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="{Binding Author}" FontWeight="Bold" FontSize="13"
+                             Foreground="{DynamicResource AccentBrush}" />
+                  <TextBlock Text="{Binding Body}" TextWrapping="Wrap" Foreground="#C4C7CD" />
+                </StackPanel>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <TextBlock Text="{Binding Status}" Foreground="{DynamicResource AccentBrush}"
+                   FontSize="12" TextWrapping="Wrap" />
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

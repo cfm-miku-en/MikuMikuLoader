@@ -1,0 +1,63 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:MikuMikuLoader.App.ViewModels"
+             x:Class="MikuMikuLoader.App.Views.NewsView">
+
+  <Grid RowDefinitions="Auto,*" Background="{DynamicResource BgBrush}">
+
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="26,0,26,12">
+      <TextBlock Grid.Column="0" Text="News &amp; announcements" FontSize="18" FontWeight="Bold"
+                 VerticalAlignment="Center" />
+      <Button Grid.Column="1" Classes="ghost" Content="Refresh" Command="{Binding ReloadCommand}" />
+    </Grid>
+
+    <Panel Grid.Row="1">
+      <ScrollViewer Padding="26,0,26,18">
+        <StackPanel Spacing="10">
+
+          <Border IsVisible="{Binding HasMotd}"
+                  Background="{DynamicResource AccentDimBrush}"
+                  BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1"
+                  CornerRadius="13" Padding="16">
+            <StackPanel Spacing="6">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border Background="{DynamicResource AccentBrush}" CornerRadius="4" Padding="7,1">
+                  <TextBlock Text="MOTD" FontSize="10" FontWeight="Bold" Foreground="#1A1206" />
+                </Border>
+                <TextBlock Text="{Binding MotdTitle}" FontWeight="Bold" FontSize="15"
+                           Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+              </StackPanel>
+              <TextBlock Text="{Binding MotdBody}" TextWrapping="Wrap" Foreground="#E7D6B8" />
+              <TextBlock Text="{Binding MotdDate}" Foreground="{DynamicResource MutedBrush}" FontSize="11" />
+            </StackPanel>
+          </Border>
+
+          <ItemsControl ItemsSource="{Binding Posts}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:NewsItemViewModel">
+                <Border Classes="card">
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="{Binding Title}" FontWeight="Bold" FontSize="15" />
+                    <TextBlock Text="{Binding DateText}" Foreground="{DynamicResource MutedBrush}" FontSize="11" />
+                    <TextBlock Text="{Binding Body}" TextWrapping="Wrap" Foreground="#C4C7CD" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <TextBlock Text="No news posts yet." IsVisible="{Binding HasNoNews}"
+                     Foreground="{DynamicResource MutedBrush}" Margin="2,4,0,0" />
+        </StackPanel>
+      </ScrollViewer>
+
+      <StackPanel IsVisible="{Binding IsEmpty}" HorizontalAlignment="Center"
+                  VerticalAlignment="Center" Spacing="6" MaxWidth="420">
+        <TextBlock Text="Nothing here yet." HorizontalAlignment="Center"
+                   Foreground="{DynamicResource TextBrush}" FontSize="15" FontWeight="Bold" />
+        <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource MutedBrush}"
+                   TextWrapping="Wrap" TextAlignment="Center" />
+      </StackPanel>
+    </Panel>
+  </Grid>
+</UserControl>

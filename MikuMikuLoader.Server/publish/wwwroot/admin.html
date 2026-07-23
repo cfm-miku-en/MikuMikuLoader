@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MikuMikuLoader - Admin Panel</title>
+<style>
+  :root {
+    --bg:#131417; --panel:#1b1d22; --panel2:#212429; --card:#1e2126;
+    --border:#2c2f36; --text:#e7e8eb; --muted:#8a8d94; --accent:#f2a03d; --danger:#c4312a;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+    font-family:"Cascadia Mono",Consolas,Menlo,monospace; font-size:14px; }
+  a { color:var(--accent); }
+  header { display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel); padding:12px 18px; border-bottom:1px solid var(--border); }
+  header .brand { font-weight:bold; }
+  header .brand span { color:var(--accent); }
+  main { max-width:1000px; margin:0 auto; padding:18px; }
+  h2 { font-size:15px; margin:0 0 10px; }
+    h3 { font-size: 14px; color: var(--accent); font-weight: 700; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:8px;
+    padding:16px; margin-bottom:16px; }
+  input, textarea, select { width:100%; background:var(--panel2); color:var(--text);
+    border:1px solid var(--border); border-radius:6px; padding:8px 10px;
+    font-family:inherit; font-size:13px; }
+  label { display:block; color:var(--muted); font-size:12px; margin:8px 0 4px; }
+  button { background:var(--accent); color:#1a1206; border:0; border-radius:6px;
+    padding:8px 14px; font-family:inherit; font-weight:600; cursor:pointer; }
+  button.ghost { background:var(--panel2); color:var(--text); border:1px solid var(--border); }
+  button.danger { background:var(--danger); color:#fff; }
+  button.small { padding:4px 10px; font-size:12px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:8px; border-bottom:1px solid var(--border); font-size:13px; }
+  th { color:var(--muted); font-weight:normal; }
+  .stat { display:inline-block; background:var(--panel2); border:1px solid var(--border);
+    border-radius:6px; padding:8px 12px; margin:0 8px 8px 0; }
+
+  /* Checkboxes must not inherit the full-width input styling. */
+  input[type=checkbox] { width:auto; margin:0; vertical-align:middle; accent-color:var(--accent); }
+
+  /* Permission toggles: compact 2x2 grid instead of stacked full-width rows. */
+  .perms { display:grid; grid-template-columns:auto auto; gap:2px 10px; }
+  .perms label { display:inline-flex; align-items:center; gap:5px;
+    margin:0; white-space:nowrap; color:var(--text); font-size:12px; cursor:pointer; }
+  td .row { justify-content:flex-end; }
+
+  /* Collapsible cards */
+  .card.collapsed > *:not(h2) { display:none; }
+  h2.toggle { cursor:pointer; user-select:none; display:flex; align-items:center; gap:8px; }
+  h2.toggle .mark { color:var(--muted); font-weight:normal; }
+  h2.toggle:hover .mark { color:var(--accent); }
+  .stat b { color:var(--accent); }
+  .muted { color:var(--muted); }
+  .pill { font-size:11px; padding:2px 7px; border-radius:4px; background:var(--panel2); }
+  .pill.warn { color:var(--accent); }
+  .pill.bad { color:#e06c6c; }
+  #status { color:var(--accent); min-height:18px; margin:8px 0; }
+  .hidden { display:none; }
+  .login-wrap { max-width:360px; margin:60px auto; }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">MikuMikuLoader Admin Panel</div>
+  <span id="whoami" class="muted" style="margin-left:auto;margin-right:12px;font-size:12px"></span>
+  <button id="logoutBtn" class="ghost small hidden" onclick="logout()">Log out</button>
+</header>
+
+<main>
+  <div id="login" class="login-wrap card">
+    <h2>Admin sign in</h2>
+    <label>Username</label>
+    <input id="u" autocomplete="username" />
+    <label>Password</label>
+    <input id="p" type="password" autocomplete="current-password" />
+    <div style="height:12px"></div>
+    <button onclick="login()">Sign in</button>
+    <div id="loginErr" class="pill bad" style="margin-top:10px"></div>
+  </div>
+
+  <div id="console" class="hidden">
+    <div id="status"></div>
+
+    <div class="card">
+      <h2>Overview</h2>
+      <div id="stats"></div>
+    </div>
+
+    <div class="card" id="secAnnouncements">
+      <h2>Post announcement</h2>
+      <div class="grid">
+        <div>
+          <label>Title</label>
+          <input id="aTitle" />
+        </div>
+        <div>
+          <label>Kind</label>
+          <select id="aKind">
+            <option value="news">News</option>
+            <option value="motd">MOTD</option>
+          </select>
+        </div>
+      </div>
+      <label>Body</label>
+      <textarea id="aBody" rows="4"></textarea>
+      <div class="row" style="margin-top:10px">
+        <label style="margin:0"><input type="checkbox" id="aPub" checked style="width:auto" /> Published</label>
+        <button onclick="createAnnouncement()">Post</button>
+      </div>
+      <div id="annList" style="margin-top:14px"></div>
+    </div>
+
+    <div class="card" id="secTags">
+      <h2>Tags</h2>
+      <p class="muted" style="margin-top:0">Devs' own tags are free-form and stay free-form. Only tags you mark as presets show up as suggestions for devs.</p>
+      <div class="row">
+        <input id="tagName" placeholder="new preset name" style="max-width:220px" />
+        <button onclick="addTag()">Add preset</button>
+      </div>
+      <div id="tagList" style="margin-top:12px"></div>
+    </div>
+
+    <div class="card" id="secAccounts">
+      <h2>Accounts</h2>
+      <div id="accList"></div>
+    </div>
+
+    <div class="card" id="secMods">
+      <h2>Mods &amp; reshades</h2>
+      <div class="row">
+        <input id="modSearch" placeholder="search name, owner or tag" oninput="renderMods()" style="max-width:260px" />
+        <select id="modKind" onchange="renderMods()">
+          <option value="all">All types</option>
+          <option value="Mod">Mods only</option>
+          <option value="Reshade">Reshades only</option>
+        </select>
+        <select id="modFlag" onchange="renderMods()">
+          <option value="all">Any state</option>
+          <option value="trusted">Trusted</option>
+          <option value="untrusted">Not trusted</option>
+          <option value="verified">Verified</option>
+          <option value="unreviewed">Not reviewed</option>
+          <option value="locked">Locked</option>
+          <option value="featured">Featured</option>
+          <option value="reported">Has 1-star</option>
+        </select>
+        <button class="ghost small" onclick="loadMods()">Reload</button>
+      </div>
+      <div id="modList" style="margin-top:10px"></div>
+    </div>
+
+    <div class="card" id="secComments">
+      <h2>Comments</h2>
+      <p class="muted" style="margin-top:0">Reported comments float to the top. Hide keeps it in the database but removes it from the loader; Delete is permanent.</p>
+      <div class="row">
+        <input id="cText" placeholder="search comment text" oninput="renderComments()" style="max-width:220px" />
+        <input id="cUser" placeholder="by user" oninput="renderComments()" style="max-width:150px" />
+        <input id="cMod" placeholder="on mod" oninput="renderComments()" style="max-width:150px" />
+        <select id="cFlag" onchange="renderComments()">
+          <option value="all">All</option>
+          <option value="reported">Reported only</option>
+          <option value="hidden">Hidden only</option>
+          <option value="banned">Banned authors</option>
+        </select>
+        <button class="ghost small" onclick="loadComments()">Reload</button>
+      </div>
+      <div id="commentList" style="margin-top:10px"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+const KEY = "mml_token";
+let token = localStorage.getItem(KEY) || "";
+
+function setStatus(msg) { document.getElementById("status").textContent = msg || ""; }
+
+async function api(path, method = "GET", body = null) {
+  const opts = { method, headers: {} };
+  if (token) opts.headers["Authorization"] = "Bearer " + token;
+  if (body !== null) { opts.headers["Content-Type"] = "application/json"; opts.body = JSON.stringify(body); }
+  const res = await fetch(path, opts);
+  if (res.status === 204) return null;
+  const text = await res.text();
+  if (!res.ok) throw new Error(text || ("Request failed (" + res.status + ")"));
+  return text ? JSON.parse(text) : null;
+}
+
+async function login() {
+  const err = document.getElementById("loginErr");
+  err.textContent = "";
+  try {
+    const auth = await api("/api/auth/login", "POST", {
+      username: document.getElementById("u").value.trim(),
+      password: document.getElementById("p").value
+    });
+    if (auth.account.role !== "Owner" && !auth.account.isStaff) {
+      err.textContent = "That account does not have admin access."; return;
+    }
+    me = auth.account;
+    token = auth.token;
+    localStorage.setItem(KEY, token);
+    showConsole();
+    await loadAll();
+  } catch (e) { err.textContent = e.message; }
+}
+
+function logout() {
+  api("/api/auth/logout", "POST").catch(() => {});
+  localStorage.removeItem(KEY);
+  token = "";
+  document.getElementById("console").classList.add("hidden");
+  document.getElementById("login").classList.remove("hidden");
+  document.getElementById("logoutBtn").classList.add("hidden");
+}
+
+let me = null;
+
+// Make every card header a collapse toggle. State is remembered per section.
+function initCollapse() {
+  document.querySelectorAll("#console .card > h2").forEach(h => {
+    if (h.dataset.wired) return;
+    h.dataset.wired = "1";
+
+    const card = h.parentElement;
+    const key = "mml_collapsed_" + (card.id || h.textContent.trim());
+
+    const mark = document.createElement("span");
+    mark.className = "mark";
+    h.prepend(mark);
+
+    const paint = () => {
+      mark.textContent = card.classList.contains("collapsed") ? "[+]" : "[-]";
+    };
+
+    if (localStorage.getItem(key) === "1") card.classList.add("collapsed");
+    paint();
+
+    h.addEventListener("click", () => {
+      card.classList.toggle("collapsed");
+      localStorage.setItem(key, card.classList.contains("collapsed") ? "1" : "0");
+      paint();
+    });
+  });
+}
+
+function showConsole() {
+  document.getElementById("login").classList.add("hidden");
+  document.getElementById("console").classList.remove("hidden");
+  document.getElementById("logoutBtn").classList.remove("hidden");
+  applyPermissions();
+  initCollapse();
+}
+
+// Hide the sections this account can't use. The owner sees everything.
+function applyPermissions() {
+  const can = p => me && (me.role === "Owner" || me[p]);
+  const show = (id, ok) => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = ok ? "" : "none";
+  };
+  show("secAnnouncements", can("canPostNews"));
+  show("secTags", can("canManageMods"));
+  show("secAccounts", can("canModerate") || can("canVerify"));
+  show("secMods", can("canManageMods") || can("canVerify"));
+  show("secComments", can("canModerate"));
+  show("permsNote", me && me.role === "Owner");
+
+  const who = document.getElementById("whoami");
+  if (who && me) {
+    const list = me.role === "Owner"
+      ? "owner - full access"
+      : ["canModerate","canManageMods","canVerify","canPostNews"]
+          .filter(p => me[p])
+          .map(p => ({canModerate:"moderate",canManageMods:"manage mods",canVerify:"verify",canPostNews:"post news"})[p])
+          .join(", ");
+    who.textContent = `${me.username} (${list || "no permissions"})`;
+  }
+}
+
+function esc(s) { return (s ?? "").toString().replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])); }
+
+async function loadAll() {
+  // Each section is permission-gated server-side, so a staff member without a
+  // given permission simply gets nothing there instead of breaking the page.
+  const safe = fn => fn().catch(() => {});
+  await Promise.all([
+    safe(loadStats), safe(loadAnnouncements), safe(loadTags),
+    safe(loadAccounts), safe(loadMods), safe(loadComments)
+  ]);
+}
+
+async function loadStats() {
+  const s = await api("/api/owner/stats");
+  const el = document.getElementById("stats");
+  const items = [
+    ["Accounts", s.accounts], ["Developers", s.developers], ["Banned", s.banned],
+    ["Pending trust", s.pendingTrust], ["Mods", s.mods], ["Published", s.published],
+    ["In review", s.inReview], ["Removed", s.removed], ["Comments", s.comments], ["Reviews", s.reviews]
+  ];
+  el.innerHTML = items.map(([k, v]) => `<span class="stat">${k}: <b>${v}</b></span>`).join("");
+}
+
+async function loadAnnouncements() {
+  const list = await api("/api/owner/announcements");
+  document.getElementById("annList").innerHTML = list.length === 0
+    ? '<div class="muted">No announcements yet.</div>'
+    : `<table><tr><th>Title</th><th>Kind</th><th>State</th><th></th></tr>` +
+      list.map(a => `<tr>
+        <td>${esc(a.title)}</td>
+        <td><span class="pill">${esc(a.kind)}</span></td>
+        <td>${a.published ? "published" : '<span class="muted">draft</span>'}</td>
+        <td class="row">
+          <button class="ghost small" onclick="togglePublish(${a.id}, ${!a.published})">${a.published ? "Unpublish" : "Publish"}</button>
+          <button class="danger small" onclick="deleteAnnouncement(${a.id})">Delete</button>
+        </td></tr>`).join("") + `</table>`;
+}
+
+async function createAnnouncement() {
+  try {
+    await api("/api/owner/announcements", "POST", {
+      title: document.getElementById("aTitle").value.trim(),
+      body: document.getElementById("aBody").value,
+      kind: document.getElementById("aKind").value,
+      published: document.getElementById("aPub").checked
+    });
+    document.getElementById("aTitle").value = "";
+    document.getElementById("aBody").value = "";
+    setStatus("Announcement posted.");
+    await loadAnnouncements();
+    await loadStats();
+  } catch (e) { setStatus(e.message); }
+}
+
+async function togglePublish(id, publish) {
+  try { await api("/api/owner/announcements/" + id, "PUT", { published: publish }); await loadAnnouncements(); }
+  catch (e) { setStatus(e.message); }
+}
+
+async function deleteAnnouncement(id) {
+  try { await api("/api/owner/announcements/" + id, "DELETE"); await loadAnnouncements(); }
+  catch (e) { setStatus(e.message); }
+}
+
+let allComments = [];
+
+async function loadComments() {
+  allComments = await api("/api/owner/comments");
+  renderComments();
+}
+
+function renderComments() {
+  const text = (document.getElementById("cText")?.value || "").trim().toLowerCase();
+  const user = (document.getElementById("cUser")?.value || "").trim().toLowerCase();
+  const mod  = (document.getElementById("cMod")?.value || "").trim().toLowerCase();
+  const flag = document.getElementById("cFlag")?.value || "all";
+
+  const list = allComments.filter(c => {
+    if (text && !(c.body || "").toLowerCase().includes(text)) return false;
+    if (user && !(c.author || "").toLowerCase().includes(user)) return false;
+    if (mod && !(c.modName || "").toLowerCase().includes(mod)) return false;
+    if (flag === "reported" && !(c.reports > 0)) return false;
+    if (flag === "hidden" && !c.hidden) return false;
+    if (flag === "banned" && !c.authorBanned) return false;
+    return true;
+  });
+
+  const el = document.getElementById("commentList");
+  if (list.length === 0) {
+    el.innerHTML = `<div class="muted">${allComments.length === 0 ? "No comments yet." : "Nothing matches those filters."}</div>`;
+    return;
+  }
+
+  el.innerHTML =
+    `<div class="muted" style="margin-bottom:6px">Showing ${list.length} of ${allComments.length}</div>` +
+    `<table><tr><th>Comment</th><th>By</th><th>On</th><th>Reports</th><th></th></tr>` +
+    list.map(c => `<tr>
+        <td style="max-width:420px">${esc(c.body)}
+          ${c.hidden ? '<span class="pill">hidden</span>' : ""}</td>
+        <td>${esc(c.author)} ${c.authorBanned ? '<span class="pill bad">banned</span>' : ""}</td>
+        <td>${esc(c.modName)}</td>
+        <td>${c.reports > 0 ? `<span class="pill bad">${c.reports}</span>` : c.reports}</td>
+        <td class="row">
+          <button class="ghost small" onclick="hideComment(${c.id}, ${!c.hidden})">${c.hidden ? "Unhide" : "Hide"}</button>
+          <button class="danger small" onclick="deleteComment(${c.id})">Delete</button>
+          <button class="danger small" onclick="wipeComments(${c.authorId})">Wipe all by user</button>
+        </td></tr>`).join("") + `</table>`;
+}
+
+async function hideComment(id, hidden) {
+  try { await api("/api/owner/comments/" + id + "/hide", "POST", { hidden }); setStatus(hidden ? "Hidden." : "Unhidden."); await loadComments(); }
+  catch (e) { setStatus(e.message); }
+}
+
+async function deleteComment(id) {
+  try { await api("/api/owner/comments/" + id, "DELETE"); setStatus("Comment deleted."); await loadComments(); }
+  catch (e) { setStatus(e.message); }
+}
+
+async function wipeComments(accountId) {
+  try { const r = await api("/api/owner/accounts/" + accountId + "/comments", "DELETE"); setStatus("Deleted " + r.deleted + " comments."); await loadComments(); }
+  catch (e) { setStatus(e.message); }
+}
+
+let ownerTags = [];
+
+async function loadTags() {
+  ownerTags = await api("/api/owner/tags");
+  const presets = ownerTags.filter(t => t.isPreset);
+  const free = ownerTags.filter(t => !t.isPreset);
+  const render = t => `<span class="stat">${esc(t.name)} <span class="muted">(${t.modCount})</span>
+      ${t.isPreset
+        ? '<span class="pill warn">preset</span>'
+        : `<button class="ghost small" onclick="makePreset(${t.id})">Make preset</button>`}
+      <button class="danger small" onclick="deleteTag(${t.id})">Delete</button></span>`;
+  document.getElementById("tagList").innerHTML =
+    `<div style="margin-bottom:8px"><span class="muted">Presets (shown to devs):</span><br>` +
+    (presets.length ? presets.map(render).join("") : '<span class="muted">None yet.</span>') + `</div>` +
+    `<div><span class="muted">Free-form (dev-created, not suggested):</span><br>` +
+    (free.length ? free.map(render).join("") : '<span class="muted">None.</span>') + `</div>`;
+}
+
+async function makePreset(id) {
+  const tag = ownerTags.find(t => t.id === id);
+  if (!tag) return;
+  try { await api("/api/owner/tags", "POST", { name: tag.name }); await loadTags(); }
+  catch (e) { setStatus(e.message); }
+}
+
+async function addTag() {
+  try {
+    await api("/api/owner/tags", "POST", { name: document.getElementById("tagName").value.trim() });
+    document.getElementById("tagName").value = "";
+    await loadTags();
+  } catch (e) { setStatus(e.message); }
+}
+
+async function deleteTag(id) {
+  try { await api("/api/owner/tags/" + id, "DELETE"); await loadTags(); }
+  catch (e) { setStatus(e.message); }
+}
+
+async function loadAccounts() {
+  const list = await api("/api/owner/accounts");
+  const isOwner = me && me.role === "Owner";
+
+  const PERMS = [
+    ["canModerate", "Moderate"],
+    ["canManageMods", "Mods"],
+    ["canVerify", "Verify"],
+    ["canPostNews", "News"]
+  ];
+
+  const permCell = a => {
+    if (a.role === "Owner") return '<span class="pill warn">all</span>';
+    if (!isOwner) {
+      const held = PERMS.filter(([k]) => a[k]).map(([, label]) => `<span class="pill">${label}</span>`).join(" ");
+      return held || '<span class="muted">-</span>';
+    }
+    return `<div class="perms">` + PERMS.map(([k, label]) =>
+      `<label><input type="checkbox" ${a[k] ? "checked" : ""} onchange="setPerm(${a.id}, '${k}', this.checked)" />${label}</label>`
+    ).join("") + `</div>`;
+  };
+
+  document.getElementById("accList").innerHTML =
+    `<table><tr><th>User</th><th>Role</th><th>Trust</th><th>Mods</th><th>Permissions</th><th></th></tr>` +
+    list.map(a => `<tr>
+      <td>${esc(a.username)} ${a.isBanned ? '<span class="pill bad">banned</span>' : ""}</td>
+      <td>${esc(a.role)}</td>
+      <td>${esc(a.trustStatus)}</td>
+      <td>${a.modCount}</td>
+      <td>${permCell(a)}</td>
+      <td class="row">
+        ${a.trustStatus === "Pending" ? `<button class="small" onclick="trust(${a.id},true)">Approve</button>
+          <button class="ghost small" onclick="trust(${a.id},false)">Reject</button>` : ""}
+        ${a.role !== "Owner" ? (a.isBanned
+          ? `<button class="ghost small" onclick="unban(${a.id})">Unban</button>`
+          : `<button class="danger small" onclick="ban(${a.id})">Ban</button>`) : ""}
+      </td></tr>`).join("") + `</table>` +
+    (isOwner ? '<p class="muted" id="permsNote" style="margin-bottom:0">Moderate = hide/delete comments and ban users. Mods = status, lock, feature, tags. Verify = trust badges and trust applications. News = announcements and MOTD. Only you can change these.</p>' : "");
+}
+
+async function setPerm(id, key, value) {
+  try {
+    await api("/api/owner/accounts/" + id + "/permissions", "POST", { [key]: value });
+    setStatus("Permissions updated.");
+    await loadAccounts();
+  } catch (e) { setStatus(e.message); await loadAccounts(); }
+}
+
+async function trust(id, approve) {
+  try { await api("/api/owner/accounts/" + id + "/trust", "POST", { approve }); await loadAccounts(); await loadStats(); }
+  catch (e) { setStatus(e.message); }
+}
+
+async function ban(id) {
+  const reason = prompt("Ban reason (optional):") || "";
+  try { await api("/api/owner/accounts/" + id + "/ban", "POST", { reason }); await loadAccounts(); await loadStats(); }
+  catch (e) { setStatus(e.message); }
+}
+
+async function unban(id) {
+  try { await api("/api/owner/accounts/" + id + "/unban", "POST"); await loadAccounts(); await loadStats(); }
+  catch (e) { setStatus(e.message); }
+}
+
+let allMods = [];
+
+async function loadMods() {
+  allMods = await api("/api/owner/mods");
+  renderMods();
+}
+
+function renderMods() {
+  const now = Date.now();
+  const featured = m => m.featuredUntil && new Date(m.featuredUntil).getTime() > now;
+  const pinned = m => m.featuredUntil && (new Date(m.featuredUntil).getTime() - now) > 365 * 86400000;
+
+  const q = (document.getElementById("modSearch")?.value || "").trim().toLowerCase();
+  const kind = document.getElementById("modKind")?.value || "all";
+  const flag = document.getElementById("modFlag")?.value || "all";
+
+  let list = allMods.filter(m => {
+    if (kind !== "all" && m.kind !== kind) return false;
+    if (flag === "trusted" && !m.trusted) return false;
+    if (flag === "untrusted" && m.trusted) return false;
+    if (flag === "verified" && !m.verified) return false;
+    if (flag === "unreviewed" && (m.trusted || m.verified)) return false;
+    if (flag === "locked" && !m.locked) return false;
+    if (flag === "featured" && !featured(m)) return false;
+    if (flag === "reported" && !(m.oneStars > 0)) return false;
+    if (q) {
+      const hay = (m.name + " " + m.owner + " " + (m.tags || []).join(" ")).toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const row = m => `<tr>
+        <td>${esc(m.name)} <span class="muted">v${esc(m.version)}</span>
+          ${m.trusted ? '<span class="pill warn">trusted</span>' : ""}
+          ${m.verified ? '<span class="pill">verified</span>' : ""}
+          ${m.locked ? '<span class="pill bad">locked</span>' : ""}
+          ${featured(m) ? `<span class="pill warn">${pinned(m) ? "pinned" : "featured"}</span>` : ""}</td>
+        <td><span class="pill">${m.kind === "Reshade" ? "Reshade" : "Mod"}</span></td>
+        <td>${esc(m.owner)}</td>
+        <td>
+          <select id="st${m.id}">
+            ${["Published","InReview","Removed"].map(s2 => `<option ${s2 === m.status ? "selected" : ""}>${s2}</option>`).join("")}
+          </select>
+        </td>
+        <td>${m.downloads}</td>
+        <td>${m.oneStars > 0 ? `<span class="pill bad">${m.oneStars}</span>` : m.oneStars}</td>
+        <td><input id="tg${m.id}" value="${esc((m.tags || []).join(", "))}" style="min-width:150px" /></td>
+        <td class="row">
+          <button class="small" onclick="setModStatus(${m.id})">Apply</button>
+          <button class="ghost small" onclick="modTrust(${m.id}, ${!m.trusted})">${m.trusted ? "Untrust" : "Trust"}</button>
+          <button class="ghost small" onclick="modVerify(${m.id}, ${!m.verified})">${m.verified ? "Unverify" : "Verify"}</button>
+          <button class="ghost small" onclick="modLock(${m.id}, ${!m.locked})">${m.locked ? "Unlock" : "Lock"}</button>
+          <button class="ghost small" onclick="saveModTags(${m.id})">Tags</button>
+          <button class="ghost small" onclick="feature(${m.id}, 1)">1d</button>
+          <button class="ghost small" onclick="feature(${m.id}, 7)">1wk</button>
+          <button class="ghost small" onclick="feature(${m.id}, 3650)">Pin</button>
+          ${featured(m) ? `<button class="ghost small" onclick="feature(${m.id}, 0)">${pinned(m) ? "Unpin" : "Unfeature"}</button>` : ""}
+          <button class="danger small" onclick="deleteMod(${m.id})">Delete</button>
+        </td></tr>`;
+
+  const head = `<tr><th>Item</th><th>Type</th><th>Owner</th><th>Status</th><th>DLs</th><th>1-star</th><th>Tags</th><th></th></tr>`;
+  const section = (title, items) => items.length === 0 ? "" :
+    `<h3 style="margin:14px 0 6px">${title} <span class="muted">(${items.length})</span></h3>` +
+    `<table>${head}${items.map(row).join("")}</table>`;
+
+  const el = document.getElementById("modList");
+  if (list.length === 0) {
+    el.innerHTML = `<div class="muted">${allMods.length === 0 ? "No mods uploaded yet." : "Nothing matches those filters."}</div>`;
+    return;
+  }
+
+  // When showing everything, split into Mods and Reshades. When filtered to one
+  // type, a single flat table reads better.
+  if (kind === "all") {
+    el.innerHTML =
+      section("Mods", list.filter(m => m.kind !== "Reshade")) +
+      section("Reshades", list.filter(m => m.kind === "Reshade"));
+  } else {
+    el.innerHTML = `<table>${head}${list.map(row).join("")}</table>`;
+  }
+}
+
+function patchMod(id, changes) {
+  const m = allMods.find(x => x.id === id);
+  if (m) Object.assign(m, changes);
+  renderMods();
+}
+
+async function modTrust(id, trusted) {
+  try {
+    await api("/api/owner/mods/" + id + "/trust", "POST", { trusted });
+    setStatus(trusted ? "Marked trusted." : "Trust removed.");
+    patchMod(id, { trusted });
+  } catch (e) { setStatus(e.message); await loadMods(); }
+}
+
+async function modVerify(id, verified) {
+  try {
+    await api("/api/owner/mods/" + id + "/verify", "POST", { verified });
+    setStatus(verified ? "Marked verified." : "Verification removed.");
+    patchMod(id, { verified });
+  } catch (e) { setStatus(e.message); await loadMods(); }
+}
+
+async function modLock(id, locked) {
+  try {
+    await api("/api/owner/mods/" + id + "/lock", "POST", { locked });
+    setStatus(locked ? "Locked - the dev can't change it now." : "Unlocked.");
+    patchMod(id, { locked });
+  } catch (e) { setStatus(e.message); await loadMods(); }
+}
+
+async function feature(id, days) {
+  try {
+    const r = await api("/api/owner/mods/" + id + "/feature", "POST", { days });
+    setStatus(days > 0 ? "Featured." : "Cleared.");
+    patchMod(id, { featuredUntil: r.featuredUntil });
+  } catch (e) { setStatus(e.message); await loadMods(); }
+}
+
+async function saveModTags(id) {
+  const raw = document.getElementById("tg" + id).value;
+  const tags = raw.split(",").map(s => s.trim()).filter(s => s.length);
+  try { await api("/api/mods/" + id + "/tags", "PUT", { tags }); setStatus("Tags saved."); await loadMods(); await loadTags(); }
+  catch (e) { setStatus(e.message); }
+}
+
+async function setModStatus(id) {
+  const status = document.getElementById("st" + id).value;
+  try { await api("/api/owner/mods/" + id + "/status", "POST", { status }); setStatus("Updated."); await loadMods(); await loadStats(); }
+  catch (e) { setStatus(e.message); }
+}
+
+async function deleteMod(id) {
+  if (!confirm("Delete this mod and its file?")) return;
+  try { await api("/api/owner/mods/" + id, "DELETE"); await loadMods(); await loadStats(); }
+  catch (e) { setStatus(e.message); }
+}
+
+(async function init() {
+  if (!token) return;
+  try {
+    me = await api("/api/auth/me");
+    if (me && (me.role === "Owner" || me.isStaff)) { showConsole(); await loadAll(); }
+    else logout();
+  } catch { logout(); }
+})();
+</script>
+</body>
+</html>

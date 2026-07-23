@@ -1,0 +1,130 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:MikuMikuLoader.App.ViewModels"
+        x:Class="MikuMikuLoader.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="MikuMikuLoader"
+        Icon="/Assets/icon.ico"
+        Width="1040" Height="700"
+        MinWidth="860" MinHeight="560"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource BgBrush}"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="-1">
+
+  <Grid RowDefinitions="52,Auto,*,30">
+
+    <!-- Title bar -->
+    <Grid Grid.Row="0" Name="TitleBar" Background="Transparent"
+          ColumnDefinitions="Auto,*,Auto" PointerPressed="OnTitleBarPressed">
+
+      <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10"
+                  Margin="26,0,0,0" VerticalAlignment="Center">
+        <TextBlock Text="MikuMikuLoader" FontWeight="Bold" FontSize="14.5"
+                   VerticalAlignment="Center" />
+        <TextBlock Text="|" Foreground="{DynamicResource BorderSoftBrush}"
+                   VerticalAlignment="Center" Margin="2,0" />
+        <TextBlock Text="Gorilla Tag Mod Loader" Foreground="{DynamicResource MutedBrush}"
+                   FontSize="12" VerticalAlignment="Center" />
+      </StackPanel>
+
+      <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6"
+                  Margin="0,0,12,0" VerticalAlignment="Center">
+        <Button Content="{Binding UpdateNotice}" IsVisible="{Binding UpdateAvailable}"
+                Command="{Binding OpenUpdateCommand}"
+                Background="{DynamicResource AccentDimBrush}"
+                Foreground="{DynamicResource AccentBrush}"
+                FontFamily="{DynamicResource MonoFont}" FontSize="12"
+                Padding="12,5" CornerRadius="10" BorderThickness="0"
+                VerticalAlignment="Center" Margin="0,0,4,0" />
+        <TextBlock Text="{Binding ServerStatus}" Foreground="{DynamicResource MutedBrush}"
+                   FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0" />
+        <Button Classes="win" Content="&#x2013;" Click="OnMinimize" />
+        <Button Classes="win" Content="&#x25A1;" Click="OnMaxRestore" />
+        <Button Classes="win close" Content="&#x00D7;" Click="OnClose" />
+      </StackPanel>
+    </Grid>
+
+    <!-- Page header + nav -->
+    <StackPanel Grid.Row="1" Margin="26,6,26,14" Spacing="14">
+      <StackPanel Spacing="3">
+        <TextBlock Classes="h1" Text="{Binding PageTitle}" />
+        <TextBlock Classes="sub" Text="{Binding PageSubtitle}" />
+      </StackPanel>
+
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <Border Grid.Column="0" Classes="segment" HorizontalAlignment="Left">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <Button Classes="tab" Content="Library"
+                    Classes.active="{Binding IsLibraryActive}"
+                    Command="{Binding ShowLibraryCommand}" />
+            <Button Classes="tab" Content="Browse Online"
+                    Classes.active="{Binding IsBrowseActive}"
+                    Command="{Binding ShowBrowseCommand}" />
+            <Button Classes="tab" Content="Reshades"
+                    Classes.active="{Binding IsReshadesActive}"
+                    Command="{Binding ShowReshadesCommand}" />
+            <Button Classes="tab" Content="News"
+                    Classes.active="{Binding IsNewsActive}"
+                    Command="{Binding ShowNewsCommand}" />
+            <Button Classes="tab" Content="Developer" IsVisible="{Binding IsLoggedIn}"
+                    Classes.active="{Binding IsDeveloperActive}"
+                    Command="{Binding ShowDeveloperCommand}" />
+            <Button Classes="tab" Content="Admin" IsVisible="{Binding IsStaff}"
+                    Command="{Binding OpenOwnerToolsCommand}" />
+          </StackPanel>
+        </Border>
+
+        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8"
+                    VerticalAlignment="Center">
+          <TextBlock Text="{Binding AccountName}" IsVisible="{Binding IsLoggedIn}"
+                     Foreground="{DynamicResource MutedBrush}" VerticalAlignment="Center"
+                     FontSize="12.5" />
+          <Button Classes="ghost" Content="Log out" IsVisible="{Binding IsLoggedIn}"
+                  Command="{Binding LogoutCommand}" />
+          <Button Classes="ghost" Content="Sign in" IsVisible="{Binding !IsLoggedIn}"
+                  Command="{Binding ShowLoginCommand}" />
+          <Button Classes="ghost" Content="Settings"
+                  Command="{Binding ShowSettingsCommand}" />
+        </StackPanel>
+      </Grid>
+    </StackPanel>
+
+    <!-- Page content -->
+    <Panel Grid.Row="2">
+      <ContentControl Content="{Binding CurrentPage}" />
+
+      <Border IsVisible="{Binding ShowMotd}" Background="#D9000000">
+        <Border Background="{DynamicResource PanelBrush}"
+                BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1"
+                CornerRadius="14" Padding="22" MaxWidth="520"
+                HorizontalAlignment="Center" VerticalAlignment="Center">
+          <StackPanel Spacing="12">
+            <TextBlock Text="{Binding MotdTitle}" FontWeight="Bold" FontSize="16"
+                       Foreground="{DynamicResource AccentBrush}" TextWrapping="Wrap" />
+            <ScrollViewer MaxHeight="260">
+              <TextBlock Text="{Binding MotdBody}" TextWrapping="Wrap" FontSize="13"
+                         Foreground="#C4C7CD" />
+            </ScrollViewer>
+            <Button Classes="accent" Content="Got it" HorizontalAlignment="Right"
+                    Command="{Binding DismissMotdCommand}" />
+          </StackPanel>
+        </Border>
+      </Border>
+    </Panel>
+
+    <!-- Status bar -->
+    <Border Grid.Row="3" Background="{DynamicResource PanelBrush}"
+            BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="0,1,0,0">
+      <Grid ColumnDefinitions="*,Auto" Margin="26,0">
+        <TextBlock Grid.Column="0" Text="{Binding StatusBar}"
+                   Foreground="{DynamicResource MutedBrush}"
+                   FontSize="11.5" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Text="{Binding ServerStatus}"
+                   Foreground="{DynamicResource MutedBrush}"
+                   FontSize="11.5" VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

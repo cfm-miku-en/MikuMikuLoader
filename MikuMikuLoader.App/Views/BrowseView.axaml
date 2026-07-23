@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:MikuMikuLoader.App.ViewModels"
+             x:Class="MikuMikuLoader.App.Views.BrowseView">
+
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- Search + actions -->
+    <Grid Grid.Row="0" ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="26,0,26,12">
+      <TextBox Grid.Column="0"
+               Text="{Binding SearchText}"
+               Watermark="Search mods other people uploaded..."
+               KeyDown="OnSearchKeyDown"
+               VerticalContentAlignment="Center" />
+
+      <ComboBox Grid.Column="1" Margin="10,0,0,0" Width="126"
+                ItemsSource="{Binding Sorts}"
+                SelectedItem="{Binding SelectedSort}"
+                VerticalAlignment="Stretch" />
+
+      <ToggleButton Grid.Column="2" Margin="8,0,0,0" Content="Trusted"
+                    IsChecked="{Binding TrustedOnly}" />
+
+      <ToggleButton Grid.Column="3" Margin="8,0,0,0" Content="Verified"
+                    IsChecked="{Binding VerifiedOnly}" />
+
+      <Button Grid.Column="4" Margin="8,0,0,0" Classes="ghost" Content="Refresh"
+              Command="{Binding ReloadCommand}" />
+    </Grid>
+
+    <Panel Grid.Row="1">
+      <ScrollViewer Padding="26,0,26,18">
+        <ItemsControl ItemsSource="{Binding Mods}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:ModItemViewModel">
+              <Border Classes="card">
+                <Grid ColumnDefinitions="*,Auto">
+
+                  <StackPanel Grid.Column="0" Spacing="5" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="15"
+                                 VerticalAlignment="Center" />
+                      <Border Background="{DynamicResource AccentBrush}" CornerRadius="7"
+                              Padding="8,2" IsVisible="{Binding IsFeatured}" VerticalAlignment="Center">
+                        <TextBlock Text="FEATURED" FontSize="9.5" FontWeight="Bold" Foreground="#20160A" />
+                      </Border>
+                      <Border Background="{DynamicResource AccentDimBrush}" CornerRadius="7"
+                              Padding="8,2" IsVisible="{Binding Trusted}" VerticalAlignment="Center">
+                        <TextBlock Text="TRUSTED" FontSize="9.5" FontWeight="Bold"
+                                   Foreground="{DynamicResource AccentBrush}" />
+                      </Border>
+                      <Border Background="{DynamicResource PanelAltBrush}" CornerRadius="7"
+                              Padding="8,2" IsVisible="{Binding IsVerified}" VerticalAlignment="Center">
+                        <TextBlock Text="VERIFIED" FontSize="9.5" FontWeight="Bold" Foreground="#7FB2E5" />
+                      </Border>
+                      <Border Background="{DynamicResource PanelAltBrush}" CornerRadius="7"
+                              Padding="8,2" IsVisible="{Binding IsReshade}" VerticalAlignment="Center">
+                        <TextBlock Text="RESHADE" FontSize="9.5" FontWeight="Bold"
+                                   Foreground="{DynamicResource MutedBrush}" />
+                      </Border>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding Subtitle}" Foreground="{DynamicResource MutedBrush}"
+                               FontSize="12" />
+
+                    <TextBlock Text="{Binding Description}" Foreground="#B7BAC0"
+                               FontSize="12.5" TextWrapping="Wrap" MaxLines="2"
+                               TextTrimming="CharacterEllipsis" IsVisible="{Binding HasDescription}" />
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
+                              VerticalAlignment="Center" Margin="16,0,0,0">
+                    <TextBlock Text="{Binding RatingText}" Foreground="{DynamicResource MutedBrush}"
+                               FontSize="11.5" VerticalAlignment="Center" Margin="0,0,4,0" />
+                    <Button Classes="ghost" Content="Details" Command="{Binding DetailsCommand}" />
+                    <Button Classes="accent" Content="{Binding InstallButtonText}"
+                            Command="{Binding InstallCommand}"
+                            IsEnabled="{Binding CanInstall}" />
+                  </StackPanel>
+                </Grid>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </ScrollViewer>
+
+      <StackPanel IsVisible="{Binding IsEmpty}" HorizontalAlignment="Center"
+                  VerticalAlignment="Center" Spacing="8" MaxWidth="440">
+        <TextBlock Text="Nothing here yet." HorizontalAlignment="Center"
+                   FontSize="16" FontWeight="Bold" />
+        <TextBlock Text="{Binding StatusText}" Foreground="{DynamicResource MutedBrush}"
+                   TextWrapping="Wrap" TextAlignment="Center" />
+      </StackPanel>
+    </Panel>
+  </Grid>
+</UserControl>

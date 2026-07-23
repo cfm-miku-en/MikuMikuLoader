@@ -1,0 +1,197 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:MikuMikuLoader.App.ViewModels"
+             x:Class="MikuMikuLoader.App.Views.DevPanelView">
+
+  <ScrollViewer Background="{DynamicResource BgBrush}">
+    <StackPanel Margin="20" Spacing="14" MaxWidth="760" HorizontalAlignment="Left">
+
+      <TextBlock Text="Developer panel" FontSize="18" FontWeight="Bold" />
+
+      <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
+              BorderThickness="1" CornerRadius="13" Padding="16">
+        <StackPanel Spacing="10">
+          <TextBlock Text="{Binding RoleMessage}" TextWrapping="Wrap"
+                     Foreground="{DynamicResource TextBrush}" />
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Classes="accent" Content="Become a developer"
+                    Command="{Binding BecomeDeveloperCommand}"
+                    IsVisible="{Binding !IsDeveloper}" IsEnabled="{Binding IsLoggedIn}" />
+            <Button Classes="ghost" Content="Apply for trusted"
+                    Command="{Binding ApplyTrustedCommand}"
+                    IsVisible="{Binding CanApplyTrusted}" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <Border Background="{DynamicResource CardBrush}" BorderBrush="{DynamicResource BorderSoftBrush}"
+              BorderThickness="1" CornerRadius="13" Padding="16" IsVisible="{Binding IsDeveloper}">
+        <StackPanel Spacing="10">
+          <TextBlock Text="Upload" FontWeight="Bold" />
+
+          <Grid ColumnDefinitions="Auto,*">
+            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,10,0">
+              <TextBlock Text="Type" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+              <ComboBox ItemsSource="{Binding Kinds}" SelectedItem="{Binding UploadKind}" Width="130" />
+            </StackPanel>
+            <TextBlock Grid.Column="1" VerticalAlignment="Bottom" TextWrapping="Wrap" FontSize="11"
+                       Foreground="{DynamicResource MutedBrush}"
+                       Text="Reshade = a .zip (your .ini preset plus Shaders and Textures folders) or a bare .ini preset. Installs into the Gorilla Tag root. Users must already have ReShade installed." />
+          </Grid>
+
+          <Grid ColumnDefinitions="*,Auto">
+            <TextBox Grid.Column="0" Text="{Binding FilePath}" Watermark="{Binding FileWatermark}"
+                     VerticalContentAlignment="Center" IsReadOnly="True" />
+            <Button Grid.Column="1" Classes="ghost" Content="Browse…" Click="OnPickFile" Margin="10,0,0,0" />
+          </Grid>
+
+          <Grid ColumnDefinitions="*,*">
+            <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,6,0">
+              <TextBlock Text="Name" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+              <TextBox Text="{Binding Name}" Watermark="My Cool Mod" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="4" Margin="6,0,0,0">
+              <TextBlock Text="Version" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+              <TextBox Text="{Binding Version}" Watermark="1.0.0" />
+            </StackPanel>
+          </Grid>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Source link (optional)" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+            <TextBox Text="{Binding RepoUrl}" Watermark="https://github.com/you/your-mod" />
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Preview images (optional, up to 8)" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+            <Grid ColumnDefinitions="*,Auto,Auto">
+              <TextBox Grid.Column="0" Text="{Binding ImagePath}" IsReadOnly="True"
+                       Watermark="png, jpg or webp - max 8 MB each" VerticalContentAlignment="Center" />
+              <Button Grid.Column="1" Classes="ghost" Content="Pick" Click="OnPickImage" Margin="8,0,0,0" />
+              <Button Grid.Column="2" Classes="ghost" Content="Clear" Click="OnClearImage" Margin="8,0,0,0" />
+            </Grid>
+          </StackPanel>
+
+          <StackPanel Spacing="4" IsVisible="{Binding IsModUpload}">
+            <TextBlock Text="Dependencies (comma-separated, optional)" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+            <TextBox Text="{Binding Dependencies}" Watermark="Utilla, GorillaLocomotion" />
+            <TextBlock Text="BepInEx is always required - mods install into its plugins folder."
+                       Foreground="{DynamicResource MutedBrush}" FontSize="11"
+                       IsVisible="{Binding IsModUpload}" />
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Description" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+            <TextBox Text="{Binding Description}" Watermark="What does it do?"
+                     AcceptsReturn="True" TextWrapping="Wrap" Height="70" />
+          </StackPanel>
+
+          <StackPanel Spacing="4">
+            <TextBlock Text="Tags (comma-separated)" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+            <TextBox Text="{Binding Tags}" Watermark="cosmetic, utility" />
+            <TextBlock Text="Presets (tap to add):" IsVisible="{Binding HasPresets}"
+                       Foreground="{DynamicResource MutedBrush}" FontSize="11" Margin="0,2,0,0" />
+            <ItemsControl ItemsSource="{Binding Presets}" IsVisible="{Binding HasPresets}">
+              <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+              </ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:PresetTagViewModel">
+                  <Button Classes="chip" Content="{Binding Name}" Command="{Binding PickCommand}" Margin="0,0,6,6" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" Spacing="10">
+            <Button Classes="accent" Content="Upload" Command="{Binding UploadCommand}"
+                    IsEnabled="{Binding !IsBusy}" />
+            <TextBlock Text="{Binding UploadStatus}" Foreground="{DynamicResource AccentBrush}"
+                       FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap" />
+          </StackPanel>
+        </StackPanel>
+      </Border>
+
+      <StackPanel Spacing="8" IsVisible="{Binding IsDeveloper}">
+        <TextBlock Text="Your mods" FontWeight="Bold" />
+        <TextBlock Text="You haven't uploaded any mods yet." IsVisible="{Binding HasNoMods}"
+                   Foreground="{DynamicResource MutedBrush}" />
+
+        <ItemsControl ItemsSource="{Binding Mods}">
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="vm:DevModItemViewModel">
+              <Border Classes="card">
+                <Expander Header="{Binding Header}">
+                  <StackPanel Spacing="10" Margin="0,8,0,0">
+                    <StackPanel Spacing="4">
+                      <TextBlock Text="Version" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+                      <TextBox Text="{Binding EditVersion}" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                      <TextBlock Text="Description" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+                      <TextBox Text="{Binding EditDescription}" AcceptsReturn="True"
+                               TextWrapping="Wrap" Height="60" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                      <TextBlock Text="Tags" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+                      <TextBox Text="{Binding EditTags}" />
+                    </StackPanel>
+                    <StackPanel Spacing="4">
+                      <TextBlock Text="Source link" Foreground="{DynamicResource MutedBrush}" FontSize="12" />
+                      <TextBox Text="{Binding EditRepoUrl}" Watermark="https://github.com/you/your-mod" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                      <Button Classes="accent" Content="Save" Command="{Binding SaveCommand}"
+                              IsEnabled="{Binding !IsBusy}" />
+                      <Button Classes="ghost" Content="Delete" Command="{Binding DeleteCommand}"
+                              IsEnabled="{Binding !IsBusy}" />
+                    </StackPanel>
+
+                    <Border Background="{DynamicResource PanelAltBrush}" CornerRadius="6"
+                            Padding="10" Margin="0,4,0,0">
+                      <StackPanel Spacing="8">
+                        <TextBlock Text="Images" FontWeight="Bold" FontSize="13" />
+                        <TextBlock Text="Add screenshots for this mod or reshade (up to 8)."
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="11" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <Button Classes="ghost" Content="Pick images" Click="OnPickModImages" />
+                          <Button Classes="accent" Content="Upload" Command="{Binding AddImagesCommand}"
+                                  IsEnabled="{Binding !IsBusy}" />
+                          <Button Classes="ghost" Content="Remove all" Command="{Binding ClearImagesCommand}"
+                                  IsEnabled="{Binding !IsBusy}" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding ImageStatus}" Foreground="{DynamicResource MutedBrush}"
+                                   FontSize="11" TextWrapping="Wrap" />
+                      </StackPanel>
+                    </Border>
+
+                    <Border Background="{DynamicResource PanelAltBrush}" CornerRadius="6"
+                            Padding="10" Margin="0,4,0,0">
+                      <StackPanel Spacing="8">
+                        <TextBlock Text="Publish new version" FontWeight="Bold" FontSize="13" />
+                        <TextBlock Text="Uploads a new DLL and bumps the version. Users see an Update button."
+                                   Foreground="{DynamicResource MutedBrush}" FontSize="11" TextWrapping="Wrap" />
+                        <Grid ColumnDefinitions="*,Auto,Auto">
+                          <TextBox Grid.Column="0" Text="{Binding NewVersionFilePath}"
+                                   Watermark="new .dll or .zip" IsReadOnly="True"
+                                   VerticalContentAlignment="Center" />
+                          <TextBox Grid.Column="1" Text="{Binding NewVersion}" Watermark="version"
+                                   Width="90" Margin="8,0,0,0" VerticalContentAlignment="Center" />
+                          <Button Grid.Column="2" Classes="ghost" Content="File..."
+                                  Click="OnPickVersionFile" Margin="8,0,0,0" />
+                        </Grid>
+                        <Button Classes="accent" Content="Publish version"
+                                Command="{Binding UploadVersionCommand}" IsEnabled="{Binding !IsBusy}"
+                                HorizontalAlignment="Left" />
+                      </StackPanel>
+                    </Border>
+                  </StackPanel>
+                </Expander>
+              </Border>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>
