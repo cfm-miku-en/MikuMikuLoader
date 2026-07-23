@@ -6,7 +6,7 @@ namespace MikuMikuLoader.App.Services;
 public static class AppInfo
 {
 
-    public const string Version = "0.3.0";
+    public const string Version = "1.0.0";
 
     public const string ReleasesPage = "https://github.com/cfm-miku-en/MikuMikuLoader/releases";
     private const string LatestReleaseApi = "https://api.github.com/repos/cfm-miku-en/MikuMikuLoader/releases/latest";
